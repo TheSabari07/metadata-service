@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/OpenCHAMI/metadata-service/internal/storage"
+	"github.com/OpenCHAMI/metadata-service/pkg/wireguard"
 )
 
 // Config holds all configuration for the service
@@ -102,6 +103,8 @@ var stopShutdownSignalNotify = func(ch chan<- os.Signal) {
 }
 
 var registerServerIntegrations = registerCustomServerIntegrations
+
+var currentWGController *wireguard.Controller
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -218,14 +221,25 @@ func runServer(cmd *cobra.Command, args []string) error {
 		r.Mount("/debug", middleware.Profiler())
 	}
 
-	// Public service endpoints.
+	if err := registerServerIntegrations(appCtx, r); err != nil {
+		return err
+	}
+
+	// Public service endpoints (outside WG middleware).
 	r.Get("/health", healthHandler)
 	r.Get("/openapi.json", ServeOpenAPISpec)
 	r.Get("/docs", ServeSwaggerUI)
 
-	if err := registerServerIntegrations(appCtx, r); err != nil {
-		return err
+	reconcileRuntime, err := newReconciliationRuntimeFn(currentWGController)
+	if err != nil {
+		return fmt.Errorf("failed to initialize reconciliation runtime: %w", err)
 	}
+	go func() {
+		<-appCtx.Done()
+		if stopErr := reconcileRuntime.Stop(); stopErr != nil {
+			log.Printf("Failed to stop reconciliation runtime cleanly: %v", stopErr)
+		}
+	}()
 
 	// Create HTTP server
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
