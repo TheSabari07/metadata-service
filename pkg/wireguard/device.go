@@ -4,6 +4,8 @@
 package wireguard
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 
 	"golang.zx2c4.com/wireguard/conn"
@@ -69,9 +71,14 @@ func NewDevice(name string, listenPort int) (*Device, error) {
 }
 
 // SetPrivateKey configures the device private key via IPC.
+// wireguard-go's IpcSet expects hex-encoded keys.
 func (d *Device) SetPrivateKey(privateKey string) error {
 	d.privateKey = privateKey
-	cfg := fmt.Sprintf("private_key=%s\n", privateKey)
+	raw, err := base64.StdEncoding.DecodeString(privateKey)
+	if err != nil {
+		return fmt.Errorf("decode private key: %w", err)
+	}
+	cfg := fmt.Sprintf("private_key=%s\n", hex.EncodeToString(raw))
 	return d.WG.IpcSet(cfg)
 }
 
@@ -81,14 +88,24 @@ func (d *Device) PrivateKeyValue() (string, error) {
 }
 
 // AddPeer adds or updates a peer with an allowed IP and keepalive.
+// wireguard-go's IpcSet expects hex-encoded keys.
 func (d *Device) AddPeer(publicKey, allowedIP string) error {
-	cfg := fmt.Sprintf("public_key=%s\nallowed_ip=%s\npersistent_keepalive_interval=25\n", publicKey, allowedIP)
+	raw, err := base64.StdEncoding.DecodeString(publicKey)
+	if err != nil {
+		return fmt.Errorf("decode public key: %w", err)
+	}
+	cfg := fmt.Sprintf("public_key=%s\nallowed_ip=%s\npersistent_keepalive_interval=25\n", hex.EncodeToString(raw), allowedIP)
 	return d.WG.IpcSet(cfg)
 }
 
 // RemovePeer removes a peer by public key.
+// wireguard-go's IpcSet expects hex-encoded keys.
 func (d *Device) RemovePeer(publicKey string) error {
-	cfg := fmt.Sprintf("public_key=%s\nremove=true\n", publicKey)
+	raw, err := base64.StdEncoding.DecodeString(publicKey)
+	if err != nil {
+		return fmt.Errorf("decode public key: %w", err)
+	}
+	cfg := fmt.Sprintf("public_key=%s\nremove=true\n", hex.EncodeToString(raw))
 	return d.WG.IpcSet(cfg)
 }
 

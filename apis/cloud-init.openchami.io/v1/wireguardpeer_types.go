@@ -6,6 +6,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"github.com/openchami/fabrica/pkg/fabrica"
 )
@@ -44,6 +45,9 @@ func (r *WireGuardPeer) Validate(ctx context.Context) error { //nolint: revive
 	}
 	if r.Spec.PublicKey == "" {
 		return fmt.Errorf("public_key is required")
+	}
+	if _, _, err := net.ParseCIDR(r.Spec.AllowedIP); err != nil {
+		return fmt.Errorf("allowed_ip must be a valid CIDR: %w", err)
 	}
 	return nil
 }

@@ -268,6 +268,18 @@ curl \
 
 If you also pass `--wireguard-only`, the server will reject requests whose remote address is not inside the configured WireGuard CIDR.
 
+## Documentation
+
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design, component interaction, and request flows
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment for Kubernetes, Docker, Podman, and systemd
+- **[Cloud-Init Reference](CLOUDINIT.md)** - NoCloud endpoint behavior and template context
+- **[Client Usage Guide](docs/CLIENT_USAGE.md)** - CLI and Go client library usage
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[FAQ](docs/FAQ.md)** - Frequently asked questions
+- **[WireGuard Testing](docs/wireguard.md)** - WireGuard bootstrap and lifecycle testing
+- **[Legacy Compatibility](LEGACY_COMPATIBILITY.md)** - Migration from legacy cloud-init service
+- **[Known Issues](bugs.md)** - Current bugs and workarounds
+
 ## Development
 
 ```bash

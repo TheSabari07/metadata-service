@@ -220,6 +220,18 @@ func (c *Controller) RemovePeerByID(peerID string) error {
 	return nil
 }
 
+// GetPeerVPNIP returns the peer VPN IP for the provided peer identifier.
+func (c *Controller) GetPeerVPNIP(peerID string) (string, bool) {
+	c.PeersMutex.RLock()
+	defer c.PeersMutex.RUnlock()
+
+	peer, ok := c.Peers[peerID]
+	if !ok || peer.VPNIP == "" {
+		return "", false
+	}
+	return peer.VPNIP, true
+}
+
 // RemovePeer removes a peer tracked by client IP and releases its allocation.
 func (c *Controller) RemovePeer(clientIP string) error {
 	c.PeersMutex.Lock()
